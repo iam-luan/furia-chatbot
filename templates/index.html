@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Chatbot da FURIA</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="chat-container">
+        <h1>Chatbot da FURIA</h1>
+        <div id="chat-box">{{ history|safe }}</div>
+        <input type="text" id="user-input" placeholder="Digite sua mensagem...">
+        <div>
+            <button onclick="sendMessage()">Enviar</button>
+            <button onclick="tweetMessage()">Tweetar</button>
+            <button onclick="clearChat()">Limpar Chat</button>
+        </div>
+    </div>
+
+    <script>
+        function updateChat(html) {
+            const chatBox = document.getElementById("chat-box");
+            chatBox.innerHTML += html;
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function sendMessage() {
+            const input = document.getElementById("user-input");
+            const message = input.value.trim();
+            if (!message) return;
+
+            fetch("/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message })
+            })
+            .then(res => res.json())
+            .then(data => {
+                updateChat(`<p><strong>Você:</strong> ${message}</p>`);
+                updateChat(`<p><strong>Bot:</strong> ${data.response}</p>`);
+                input.value = "";
+            });
+        }
+
+        function tweetMessage() {
+            const input = document.getElementById("user-input");
+            const message = input.value.trim();
+            if (!message) return;
+
+            fetch("/tweet", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message })
+            })
+            .then(res => res.json())
+            .then(data => {
+                updateChat(`<p><strong>Você (tweet):</strong> ${message}</p>`);
+                updateChat(`<p><strong>Bot:</strong> ${data.message}</p>`);
+                input.value = "";
+            });
+        }
+
+        function clearChat() {
+            fetch("/clear", { method: "POST" })
+                .then(() => {
+                    document.getElementById("chat-box").innerHTML = "";
+                    document.getElementById("user-input").value = "";
+                });
+        }
+    </script>
+</body>
+</html>
